@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDFHL Grand Prix — Commissioner Deck Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a14;
+    --panel: #12122a;
+    --panel2: #0e0e22;
+    --border: #2a2a4a;
+    --text: #e8e8f0;
+    --dim: #6a6a9a;
+    --accent: #ff6b00;
+    --accent2: #ffe600;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --blue: #3d9be9;
+    --purple: #9b59b6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    padding: 20px 16px 40px;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+  .title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(10px, 2.5vw, 15px);
+    color: var(--accent);
+    text-shadow: 3px 3px 0 #7a1c00;
+    margin-bottom: 6px;
+    line-height: 1.7;
+  }
+  .subtitle { font-size: 20px; color: var(--dim); letter-spacing: 3px; }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .panel-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+  }
+
+  /* ── DECK STATUS ── */
+  .deck-count {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(22px, 5vw, 36px);
+    color: var(--accent2);
+    text-align: center;
+    margin-bottom: 4px;
+    text-shadow: 2px 2px 0 #7a6200;
+  }
+  .deck-sub {
+    text-align: center;
+    font-size: 18px;
+    color: var(--dim);
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+  }
+  .reshuffle-notice {
+    text-align: center;
+    font-size: 15px;
+    color: var(--accent);
+    background: rgba(255,107,0,0.1);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 6px;
+    margin-bottom: 10px;
+    display: none;
+  }
+
+  /* Card breakdown */
+  .card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 18px;
+  }
+  .card-row:last-child { border-bottom: none; }
+  .card-row-left { display: flex; align-items: center; gap: 8px; }
+  .card-row-count {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--dim);
+    min-width: 32px;
+    text-align: right;
+  }
+  .card-row-count.has-cards { color: var(--text); }
+  .card-pip-row { display: flex; gap: 3px; flex-wrap: wrap; }
+  .card-pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+  }
+  .card-pip.used { background: rgba(255,255,255,0.1); }
+
+  .discard-count {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 17px;
+    color: var(--dim);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* ── DRAW ── */
+  .draw-area { display: flex; flex-direction: column; gap: 10px; }
+
+  select, button {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    padding: 8px 12px;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+
+  .btn-draw {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 12px;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+  }
+  .btn-draw:hover { background: #ff8c33; border-color: #ff8c33; }
+  .btn-draw:active { transform: scale(0.97); }
+  .btn-draw:disabled { background: #333; border-color: #333; color: #666; cursor: not-allowed; transform: none; }
+
+  .btn-reshuffle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 8px;
+    letter-spacing: 1px;
+    background: var(--panel2);
+    border-color: var(--dim);
+    color: var(--dim);
+  }
+  .btn-reshuffle:hover { border-color: var(--text); color: var(--text); }
+
+  /* Drawn card reveal */
+  .drawn-card {
+    text-align: center;
+    padding: 14px 10px;
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: border-color 0.3s;
+  }
+  .drawn-card.active { border-color: var(--accent2); }
+  .drawn-card-emoji { font-size: 48px; line-height: 1; }
+  .drawn-card-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--accent2);
+    letter-spacing: 1px;
+  }
+  .drawn-card-effect { font-size: 17px; color: var(--dim); }
+  .drawn-card-team { font-size: 15px; color: var(--accent); letter-spacing: 1px; }
+  .drawn-card-placeholder { font-size: 18px; color: rgba(255,255,255,0.15); letter-spacing: 2px; }
+
+  /* ── TEAM HANDS ── */
+  .full-width { grid-column: 1 / -1; }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .team-card {
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .team-card-name {
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .team-items { display: flex; flex-direction: column; gap: 5px; min-height: 36px; }
+  .team-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 17px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    padding: 3px 6px;
+  }
+  .team-item-left { display: flex; align-items: center; gap: 5px; }
+  .team-item-name { font-size: 15px; color: var(--dim); }
+  .btn-remove {
+    font-size: 14px;
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    padding: 0 2px;
+    width: auto;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .btn-remove:hover { color: #ff6b6b; background: none; border: none; }
+  .team-empty { font-size: 15px; color: rgba(255,255,255,0.15); letter-spacing: 1px; }
+  .team-full-tag {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: var(--accent);
+    background: rgba(255,107,0,0.1);
+    border: 1px solid rgba(255,107,0,0.3);
+    border-radius: 3px;
+    padding: 2px 4px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* ── LOG ── */
+  .log-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+  .log-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+    border: 1px solid transparent;
+  }
+  .log-entry:first-child { border-color: var(--border); }
+  .log-week {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: var(--dim);
+    min-width: 40px;
+  }
+  .log-team { color: var(--accent); min-width: 100px; }
+  .log-item { min-width: 28px; }
+  .log-name { color: var(--dim); }
+  .log-empty { font-size: 17px; color: rgba(255,255,255,0.15); letter-spacing: 2px; }
+
+  /* ── FOOTER ── */
+  .footer-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border);
+    justify-content: flex-end;
+  }
+  .btn-danger {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 8px 14px;
+    background: var(--panel2);
+    border-color: var(--red);
+    color: var(--red);
+    width: auto;
+    letter-spacing: 1px;
+  }
+  .btn-danger:hover { background: rgba(231,76,60,0.1); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ─────────────────────────────────────────────
+  ✏️  EDIT TEAM NAMES HERE — do this once before Week 1.
+  Keep the format exactly as shown (quotes, commas).
+───────────────────────────────────────────── -->
+<script>
+const TEAM_NAMES = [
+  "Team Alpha",
+  "Team Bravo",
+  "Team Charlie",
+  "Team Delta",
+  "Team Echo",
+  "Team Foxtrot",
+  "Team Golf",
+  "Team Hotel",
+];
+</script>
+<!-- ─────────────────────────────────────────────
+  🚫  DO NOT EDIT BELOW THIS LINE
+───────────────────────────────────────────── -->
+
+<script>
+// ── Card definitions ──
+const CARD_DEFS = [
+  { id: "mushroom",   emoji: "🍄", name: "Mushroom",    effect: "Move 2 bonus spaces immediately",          count: 5 },
+  { id: "star",       emoji: "⭐", name: "Star",         effect: "Declare before/after game for bonus",      count: 3 },
+  { id: "green",      emoji: "🐢", name: "Green Shell",  effect: "Any team back 1 space",                    count: 3 },
+  { id: "red",        emoji: "🔴", name: "Red Shell",    effect: "Team directly ahead back 2 spaces",        count: 3 },
+  { id: "banana",     emoji: "🍌", name: "Banana Peel",  effect: "Place on track (max 5 spaces ahead)",      count: 3 },
+  { id: "blue",       emoji: "🔵", name: "Blue Shell",   effect: "Current leader back 3 spaces",             count: 2 },
+  { id: "lightning",  emoji: "⚡", name: "Lightning",    effect: "All other teams lose 1 space",             count: 2 },
+];
+
+const STORAGE_KEY = "sdfhl_commissioner_v1";
+const MAX_ITEMS   = 2;
+
+// ── State ──
+let state = loadState();
+
+function defaultState() {
+  return {
+    deck:      buildShuffledDeck(),
+    discard:   [],
+    hands:     Object.fromEntries(TEAM_NAMES.map(n => [n, []])),
+    log:       [],
+    week:      1,
+  };
+}
+
+function buildShuffledDeck() {
+  const cards = [];
+  CARD_DEFS.forEach(def => {
+    for (let i = 0; i < def.count; i++) cards.push(def.id);
+  });
+  // Fisher-Yates shuffle
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  return cards;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const saved = JSON.parse(raw);
+    // Ensure all current teams have a hand entry
+    TEAM_NAMES.forEach(n => { if (!saved.hands[n]) saved.hands[n] = []; });
+    return saved;
+  } catch { return defaultState(); }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function cardDef(id) { return CARD_DEFS.find(c => c.id === id); }
+
+// ── Actions ──
+function drawCard(teamName) {
+  if (!teamName) return;
+  const hand = state.hands[teamName];
+  if (hand.length >= MAX_ITEMS) return;
+
+  if (state.deck.length === 0) reshuffleDeck(false);
+  if (state.deck.length === 0) return; // still empty
+
+  const cardId = state.deck.pop();
+  state.discard.push(cardId);
+  hand.push(cardId);
+
+  const def = cardDef(cardId);
+  state.log.unshift({ week: state.week, team: teamName, cardId, emoji: def.emoji, name: def.name });
+  if (state.log.length > 30) state.log.pop();
+
+  saveState();
+  render(cardId, teamName);
+}
+
+function removeItem(teamName, index) {
+  state.hands[teamName].splice(index, 1);
+  saveState();
+  render(null, null);
+}
+
+function reshuffleDeck(manual = true) {
+  state.deck = buildShuffledDeck();
+  state.discard = [];
+  saveState();
+  if (manual) render(null, null);
+}
+
+function hardReset() {
+  if (!confirm("Reset ALL data? This clears the deck, all team hands, and the draw log. This cannot be undone.")) return;
+  state = defaultState();
+  saveState();
+  render(null, null);
+}
+
+// ── Render ──
+let lastDrawn = null;
+let lastTeam  = null;
+
+function render(drawnCardId, drawnTeam) {
+  if (drawnCardId) { lastDrawn = drawnCardId; lastTeam = drawnTeam; }
+
+  const deckLeft = state.deck.length;
+  const discardCount = state.discard.length;
+
+  // Count remaining per card type
+  const remaining = {};
+  CARD_DEFS.forEach(d => remaining[d.id] = 0);
+  state.deck.forEach(id => remaining[id]++);
+
+  // ── Deck panel ──
+  const cardRows = CARD_DEFS.map(def => {
+    const rem = remaining[def.id];
+    const pips = Array.from({length: def.count}, (_, i) =>
+      `<div class="card-pip${i >= rem ? ' used' : ''}"></div>`
+    ).join('');
+    return `
+      <div class="card-row">
+        <div class="card-row-left">
+          <span>${def.emoji}</span>
+          <span style="font-size:17px">${def.name}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="card-pip-row">${pips}</div>
+          <div class="card-row-count${rem > 0 ? ' has-cards' : ''}">${rem}/${def.count}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const reshuffleNotice = deckLeft === 0
+    ? `<div class="reshuffle-notice" id="reshuffleNotice" style="display:block">⚠ DECK EMPTY — reshuffle to continue</div>`
+    : `<div class="reshuffle-notice" id="reshuffleNotice"></div>`;
+
+  // ── Draw card display ──
+  let drawnHtml;
+  if (lastDrawn) {
+    const def = cardDef(lastDrawn);
+    drawnHtml = `
+      <div class="drawn-card active">
+        <div class="drawn-card-team">▶ ${lastTeam}</div>
+        <div class="drawn-card-emoji">${def.emoji}</div>
+        <div class="drawn-card-name">${def.name}</div>
+        <div class="drawn-card-effect">${def.effect}</div>
+      </div>`;
+  } else {
+    drawnHtml = `
+      <div class="drawn-card">
+        <div class="drawn-card-placeholder">DRAW A CARD</div>
+      </div>`;
+  }
+
+  // ── Team selector ──
+  const teamOptions = TEAM_NAMES.map(n => {
+    const hand = state.hands[n];
+    const full = hand.length >= MAX_ITEMS ? ' [FULL]' : '';
+    return `<option value="${n}">${n}${full}</option>`;
+  }).join('');
+
+  // ── Team hands ──
+  const teamCards = TEAM_NAMES.map(name => {
+    const hand = state.hands[name];
+    const full = hand.length >= MAX_ITEMS;
+    const items = hand.length === 0
+      ? `<div class="team-empty">— EMPTY —</div>`
+      : hand.map((cardId, i) => {
+          const def = cardDef(cardId);
+          return `
+            <div class="team-item-row">
+              <div class="team-item-left">
+                <span>${def.emoji}</span>
+                <span class="team-item-name">${def.name}</span>
+              </div>
+              <button class="btn-remove" onclick="removeItem('${name}', ${i})" title="Mark as played / remove">✕</button>
+            </div>`;
+        }).join('');
+    return `
+      <div class="team-card">
+        <div class="team-card-name">${name}</div>
+        <div class="team-items">${items}</div>
+        ${full ? '<div class="team-full-tag">FULL — 2/2</div>' : ''}
+      </div>`;
+  }).join('');
+
+  // ── Log ──
+  const logEntries = state.log.length === 0
+    ? `<div class="log-empty">NO DRAWS YET</div>`
+    : state.log.slice(0, 15).map(e => `
+        <div class="log-entry">
+          <div class="log-week">WK ${e.week}</div>
+          <div class="log-item">${e.emoji}</div>
+          <div class="log-team">${e.team}</div>
+          <div class="log-name">${e.name}</div>
+        </div>`).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <div class="title">🃏 GRAND PRIX — COMMISSIONER DECK</div>
+      <div class="subtitle">ITEM CARD MANAGER</div>
+    </div>
+
+    <div class="grid">
+
+      <!-- Deck Status -->
+      <div class="panel">
+        <div class="panel-title">📦 DECK STATUS</div>
+        ${reshuffleNotice}
+        <div class="deck-count">${deckLeft}</div>
+        <div class="deck-sub">CARDS REMAINING</div>
+        ${cardRows}
+        <div class="discard-count">🗑 DISCARD PILE: ${discardCount} card${discardCount !== 1 ? 's' : ''}</div>
+      </div>
+
+      <!-- Draw Controls -->
+      <div class="panel">
+        <div class="panel-title">🎰 DRAW A CARD</div>
+        <div class="draw-area">
+          <select id="teamSelect">${teamOptions}</select>
+          <button class="btn-draw" onclick="handleDraw()" ${deckLeft === 0 ? 'disabled' : ''}>
+            ▶ DRAW CARD
+          </button>
+          <button class="btn-reshuffle" onclick="reshuffleDeck()">↺ RESHUFFLE DISCARD INTO DECK</button>
+          ${drawnHtml}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Team Hands -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">🎒 TEAM HANDS (MAX ${MAX_ITEMS} ITEMS)</div>
+      <div class="team-grid">${teamCards}</div>
+    </div>
+
+    <!-- Log -->
+    <div class="panel">
+      <div class="panel-title">📋 DRAW LOG</div>
+      <div class="log-list">${logEntries}</div>
+    </div>
+
+    <div class="footer-actions">
+      <div style="flex:1; font-size:16px; color:var(--dim); align-self:center">
+        Week tracking is in the public tracker file.
+      </div>
+      <button class="btn-danger" onclick="hardReset()">⚠ FULL RESET</button>
+    </div>
+  `;
+}
+
+function handleDraw() {
+  const team = document.getElementById('teamSelect').value;
+  const hand = state.hands[team];
+  if (hand.length >= MAX_ITEMS) {
+    alert(`${team} already holds ${MAX_ITEMS} items. Remove one before drawing.`);
+    return;
+  }
+  drawCard(team);
+}
+
+// Initial render
+render(null, null);
+</script>
+
+<div id="app"></div>
+
+</body>
+</html>
