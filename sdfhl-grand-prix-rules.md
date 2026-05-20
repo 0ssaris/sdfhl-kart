@@ -2,7 +2,7 @@
 
 ## Overview
 
-Each team has a **kart on a 20-space race track** that runs the length of the regular season (9 weeks). The goal is to cross the finish line first. Game results move your kart forward. Items create chaos, comebacks, and grudges — very Mario Kart.
+Each team has a **kart on a 24-space square race track** that loops for the entire regular season (9 weeks). Karts accumulate spaces all season — there is no single finish line. At the end of Week 9, the team with the most **total spaces** wins the Grand Prix. Laps completed are tracked and displayed throughout the season.
 
 The race runs **regular season only (Weeks 1–9)**. Playoffs are fully separate.
 
@@ -10,23 +10,45 @@ The race runs **regular season only (Weeks 1–9)**. Playoffs are fully separate
 
 ## Track Layout
 
+The track is a square circuit with **24 spaces per lap**. Karts run clockwise starting from the bottom-left.
+
 ```
-START → [1][2][3][📦][5][6][7][📦][9][10][11][12][📦][14][15][16][📦][18][19] → 🏁 FINISH
+[18]←[17]←[16]←[15]←[14]←[13]←[12📦]
+ ↓                                  ↑
+[19]         INNER PANEL           [11]
+[20]          (lap counts,         [10]
+[21]           standings)          [ 9]
+[22]                               [ 8]
+[23]                               [ 7]
+ ↓                                  ↑
+[🏁]→[ 1]→[ 2]→[ 3]→[ 4]→[ 5]→[ 6📦]
 ```
 
-**Item Boxes** are located at spaces **4, 8, 12, and 16**. Each Item Box is a one-time trigger per team — you collect one item card the first time your kart reaches or passes through each box. Once you've passed an Item Box, you won't draw from it again.
+**Item Boxes** are located at the **four corners**: spaces **6, 12, 18, and 0/START**. Teams draw one item card every time their kart reaches a corner — this resets each lap, so corners trigger again on every pass.
 
 ---
 
-## Movement Rules
+## Scoring & Movement
 
 | Result | Spaces Moved |
 |--------|-------------|
-| **Win** | +3 spaces |
-| **Tie** | +1 space |
-| **Loss** | 0 spaces (no backward movement from game results) |
+| **Win** | 5 + goals scored |
+| **Tie** | 3 + goals scored |
+| **Loss** | Goals scored only |
+| **Bye Week** | 0 spaces |
 
-Movement is applied after each week's game results are posted.
+Spaces are cumulative across all 9 weeks. There is no backward movement from game results.
+
+**Example:** A team wins 4–2. They move 5 + 4 = **9 spaces**.
+
+---
+
+## Laps
+
+When a kart's total spaces reach a multiple of 24, they complete a lap and their kart returns to the START position for a new circuit. Laps are tracked in the standings and displayed on the live tracker.
+
+**Season winner = most total spaces at end of Week 9.**
+Tiebreaker: regular season record. Still tied: shared victory.
 
 ---
 
@@ -34,23 +56,23 @@ Movement is applied after each week's game results are posted.
 
 ### Holding Items
 - Teams may hold up to **2 items** at a time.
-- Items are held **secretly** — only you and the commissioner know what you're holding.
-- If you land on an Item Box while at max capacity, you may discard one item to draw a new one, or skip the draw.
-- Item plays are **announced to the commissioner** and posted publicly after they take effect.
+- Items are held **secretly** — only the team and commissioner know what is held.
+- If you reach a corner at max capacity, discard one item to draw a new one or skip the draw.
+- Item plays are **submitted to the commissioner**. Plays are posted publicly after they take effect.
 
 ### Item Reference
 
-| Item | Effect | Targeting |
-|------|--------|-----------|
-| 🍄 **Mushroom** | Move 2 bonus spaces immediately | Self |
-| ⭐ **Star** | See Star Rules below | Self |
-| 🐢 **Green Shell** | Force any one team back **1 space** | Any team |
-| 🔴 **Red Shell** | Force the team **directly ahead of you** back **2 spaces** | Team ranked one place ahead |
-| 🔵 **Blue Shell** | Force the **current space leader** back **3 spaces** | Leader only (automatic) |
-| 🍌 **Banana Peel** | Place on a space; next kart to land there loses all movement that week | See Banana Peel Rules |
-| ⚡ **Lightning** | All other teams lose **1 space** | Everyone except you |
+| Item | Effect | Targeting | Spaces |
+|------|--------|-----------|--------|
+| 🍄 **Mushroom** | Move forward immediately | Self | **+5** |
+| ⭐ **Star** | See Star Rules below | Self | Varies |
+| 🐢 **Green Shell** | Send any team backward | Any team | **−4** |
+| 🔴 **Red Shell** | Send the team directly ahead backward | Next in standings | **−6** |
+| 🔵 **Blue Shell** | Send the current space leader backward | Leader only | **−10** |
+| 🍌 **Banana Peel** | Place on a track space; next kart to land there loses all movement that week | See Banana Peel Rules | — |
+| ⚡ **Lightning** | All other teams lose spaces | Everyone except you | **−4 each** |
 
-**Space floor:** No team may drop below space 0 from any offensive item.
+**Space floor:** No team may drop below 0 total spaces from any offensive item.
 
 ### Item Deck Composition (20 Cards)
 
@@ -70,30 +92,28 @@ When the deck is exhausted, shuffle the discard pile and continue.
 
 ## Star Rules ⭐
 
-The Star may be declared **before or after your weekly game**, with different effects.
+The Star may be declared **before or after your weekly game**.
 
 ### Declared BEFORE the game (high stakes):
 | Result | Effect |
 |--------|--------|
-| Win | Move **4 spaces** (+1 bonus for the commitment) |
-| Loss | Move **1 space** (protected from the 0) |
-| Tie | Move **1 space** (Star has no additional effect on a tie) |
+| Win | Move normal win spaces **+3 bonus** |
+| Loss | Move as if you **tied** (3 + goals instead of goals only) |
+| Tie | Move normal tie spaces (no additional effect) |
 
 ### Declared AFTER the game (safe play):
-Move **+1 space**, regardless of win, loss, or tie.
+Move **+4 spaces**, regardless of win, loss, or tie.
 
-**The strategic tension:** Declaring before a win nets you 4 spaces — same total as declaring after a win. The real gamble is whether to commit before knowing the result for loss protection, or wait for a guaranteed but weaker +1.
+**The strategic tension:** Declaring before a loss converts it to a tie result — potentially saving significant spaces. But if you win, the bonus is only +3. Declaring after guarantees a flat +4 with no risk.
 
 ---
 
 ## Banana Peel Rules 🍌
 
-- You may place a Banana Peel on **any space within 5 spaces ahead of your current position**.
-  - Example: If you're on space 9, valid placement is spaces 10–14.
-- The Peel stays on the track until triggered.
-- When a team's movement lands them on a Banana Peel space, their **movement for that week is cancelled** (they return to their starting position for the week).
-- Banana Peel resolves **after all weekly movement is applied**.
-- If multiple teams land on the same Peel in the same week, **all are affected** — then the Peel is removed.
+- You may only place a Banana Peel on a space **within 8 spaces ahead of your current track position** (wraps around the circuit if needed).
+- The Peel remains on the track until triggered.
+- When a team's movement lands them on a Banana Peel space, their **movement for that week is cancelled** — they return to their position before moving. The Peel is then removed.
+- If multiple teams land on the same Peel in the same week, **all are affected**, then the Peel is removed.
 
 ---
 
@@ -102,26 +122,21 @@ Move **+1 space**, regardless of win, loss, or tie.
 | Shell | Who It Hits |
 |-------|------------|
 | 🐢 Green Shell | **Any team you choose** |
-| 🔴 Red Shell | **The team ranked directly ahead of you** (next in standings by space count) |
-| 🔵 Blue Shell | **The current space leader** (most spaces at time of play; tiebreaker: reached that position earliest by week number) |
+| 🔴 Red Shell | **The team ranked directly ahead of you** (by total spaces) |
+| 🔵 Blue Shell | **The current total-spaces leader** (tiebreaker: reached that position earliest by week) |
 
 ---
 
-## Winning the Race
+## Item Play Submissions
 
-- The **first team to reach space 20 or beyond** wins the race.
-- The race is over for the winner, but tracking continues for all other teams (bragging rights, consolation standings).
-- **If multiple teams cross the finish line in the same week:**
-  1. Most total spaces wins.
-  2. Still tied → that week's game result (Win beats Tie).
-  3. Still tied → shared victory.
-- **If nobody crosses by end of Week 9:** Most spaces at season's end wins. Tiebreaker: regular season record.
+Teams submit item plays to the **commissioner** before the weekly results post goes live. Plays are public knowledge once resolved. Star declarations must be made **before the game tip-off**.
+
+Suggested channel: Discord, group chat, or forum DM to the commissioner.
 
 ---
 
 ## Administration
 
-- The **commissioner** maintains the item deck and posts weekly track updates.
-- Item plays are submitted to the commissioner **before the weekly results post goes live**.
-- Items held are **secret**; item plays are **public** once resolved.
-- Suggested update format: a track image or visual showing each team's position, current Banana Peels on the track, and the week number.
+- The **commissioner** maintains the item deck and pushes weekly updates via the admin tool.
+- The live race tracker updates automatically when the commissioner pushes — no manual site editing required.
+- Suggested weekly workflow: enter results + goals in admin tool → apply item plays → push → done.
