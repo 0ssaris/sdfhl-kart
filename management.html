@@ -608,8 +608,8 @@ function handleDraw() {
   drawCard(team);
 }
 
-// Initial render
-render(null, null);
+// Initial render — wait for DOM
+window.addEventListener('DOMContentLoaded', () => render(null, null));
 </script>
 
 <div id="app"></div>
