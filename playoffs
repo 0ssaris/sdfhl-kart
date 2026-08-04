@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDFHL Grand Prix — Playoffs</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a14; --panel:#12122a; --panel2:#0e0e22; --border:#2a2a4a;
+    --text:#e8e8f0; --dim:#6a6a9a; --accent:#ff6b00; --accent2:#ffe600;
+    --green-c:#27ae60; --red-c:#e74c3c;
+    --track-w: 4; /* spaces on strip */
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'VT323',monospace;padding:20px 16px 40px;min-height:100vh;}
+  .container{max-width:860px;margin:0 auto;}
+
+  /* HEADER */
+  .header{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--border);}
+  .title{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.5vw,16px);color:var(--accent);text-shadow:3px 3px 0 #7a1c00;margin-bottom:8px;line-height:1.7;}
+  .subtitle{font-size:22px;color:var(--dim);letter-spacing:3px;margin-bottom:8px;}
+  .week-pips{display:flex;justify-content:center;gap:8px;margin-top:8px;}
+  .pip{width:11px;height:11px;border-radius:50%;background:var(--border);border:1px solid var(--dim);}
+  .pip.done{background:var(--dim);border-color:var(--dim);}
+  .pip.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px var(--accent);}
+
+  /* CHAMPION BANNER */
+  .champion-banner{
+    background:linear-gradient(135deg,#1a1200,#2a2000);
+    border:2px solid var(--accent2);border-radius:8px;
+    padding:18px 20px;margin-bottom:20px;text-align:center;display:none;
+  }
+  .champion-banner.visible{display:block;}
+  .champion-title{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--accent2);letter-spacing:3px;margin-bottom:10px;}
+  .champion-name{font-size:36px;letter-spacing:3px;}
+
+  /* DRAG STRIP */
+  .strip-section{background:var(--panel);border:2px solid var(--border);border-radius:8px;padding:18px 16px;margin-bottom:16px;}
+  .section-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--dim);letter-spacing:3px;margin-bottom:16px;}
+
+  .lane{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+    position:relative;
+    transition:opacity .4s;
+  }
+  .lane:last-child{border-bottom:none;}
+  .lane.eliminated{opacity:.45;}
+
+  /* Team label */
+  .lane-label{
+    width:80px;flex-shrink:0;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .lane-dot{width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);display:inline-block;margin-right:5px;vertical-align:middle;}
+  .lane-name{font-size:18px;white-space:nowrap;}
+  .loss-row{display:flex;gap:3px;padding-left:2px;}
+  .loss-mark{
+    font-family:'Press Start 2P',monospace;font-size:7px;
+    color:var(--red-c);
+    background:rgba(231,76,60,0.15);
+    border:1px solid rgba(231,76,60,0.3);
+    border-radius:2px;padding:2px 4px;
+  }
+  .loss-mark.empty{color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.08);}
+
+  /* Track spaces */
+  .lane-track{flex:1;display:flex;align-items:center;gap:3px;position:relative;}
+
+  .track-space{
+    flex:1;height:40px;
+    background:var(--road,#1e1e38);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .track-space.has-kart{border-color:rgba(255,255,255,0.2);}
+
+  .kart-icon{
+    width:30px;height:30px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Press Start 2P',monospace;font-size:7px;
+    color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,0.8);
+    transition:all .3s;
+    z-index:2;position:relative;
+  }
+
+  .kart-exploded{
+    font-size:22px;
+    animation:wobble 1s ease-in-out infinite alternate;
+  }
+  @keyframes wobble{from{transform:scale(1) rotate(-5deg);}to{transform:scale(1.1) rotate(5deg);}}
+
+  /* Finish line */
+  .finish-line{
+    width:36px;height:40px;flex-shrink:0;
+    background-image:linear-gradient(45deg,#fff 25%,transparent 25%),linear-gradient(-45deg,#fff 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#fff 75%),linear-gradient(-45deg,transparent 75%,#fff 75%);
+    background-size:8px 8px;
+    background-position:0 0,0 4px,4px -4px,-4px 0;
+    background-color:#111;
+    border:2px solid #fff;
+    border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .track-space.start-grid{background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);border-radius:3px;}
+  .cell-label.grid-lbl{font-family:'Press Start 2P',monospace;font-size:5px;color:rgba(255,255,255,0.2);margin-top:2px;}
+
+  /* Road dashes between spaces */
+  .dash{
+    width:10px;height:2px;
+    background:rgba(255,255,255,0.12);
+    flex-shrink:0;border-radius:1px;
+  }
+
+  /* WIN COUNT badge */
+  .win-badge{
+    font-family:'Press Start 2P',monospace;font-size:6px;
+    color:var(--accent2);width:36px;flex-shrink:0;
+    text-align:center;
+  }
+
+  /* LEGEND */
+  .legend{display:flex;flex-wrap:wrap;gap:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:14px;}
+  .legend-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--dim);letter-spacing:2px;width:100%;}
+  .legend-item{font-size:17px;color:var(--dim);display:flex;align-items:center;gap:6px;}
+
+  /* STANDINGS TABLE */
+  .standings-section{background:var(--panel);border:2px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;}
+  .standing-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .standing-row:last-child{border-bottom:none;}
+  .standing-row.elim{opacity:.4;}
+  .pos{font-family:'Press Start 2P',monospace;font-size:8px;width:26px;text-align:center;flex-shrink:0;color:var(--dim);}
+  .pos.p1{color:#ffd700;} .pos.p2{color:#c0c0c0;} .pos.p3{color:#cd7f32;}
+  .s-name{flex:1;font-size:20px;}
+  .s-wins{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--green-c);min-width:50px;}
+  .s-losses{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--red-c);min-width:50px;}
+  .s-status{font-size:16px;color:var(--dim);min-width:80px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="container"><div id="app"></div></div>
+<script>
+// ╔══════════════════════════════════════════════════════╗
+// ║  ✏️  EDIT THIS BLOCK EACH WEEK                       ║
+// ╚══════════════════════════════════════════════════════╝
+const PLAYOFF_DATA = {
+  week: 1,        // current playoff week (1–6)
+  totalWeeks: 6,  // total playoff weeks
+
+  // wins  : total wins this playoff
+  // losses: total losses (2 = eliminated)
+  // status: "active" | "eliminated" | "champion"
+  teams: [
+    { name:"Purple", color:"#7030a0", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Brown",  color:"#7f6000", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Blue",   color:"#b4c6e7", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Neon",   color:"#ffff00", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Orange", color:"#f86308", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Grey",   color:"#757070", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Green",  color:"#00b050", wins:0, losses:0, status:"active", autoWin:false },
+    { name:"Pink",   color:"#ef2fc6", wins:0, losses:0, status:"active", autoWin:false },
+  ],
+};
+// ╚══════════════════════════════════════════════════════╝
+
+const MAX_TRACK = 9; // 1.5x the 6-week playoff window — single lane for all teams
+
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function ordinal(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+function render(){
+  const{week,totalWeeks,teams}=PLAYOFF_DATA;
+  const playoffWeek=week;
+  const champion=teams.find(t=>t.status==="champion");
+  const activeTeams=teams.filter(t=>t.status!=="eliminated"&&t.status!=="champion");
+  const sorted=[...teams].sort((a,b)=>{
+    if(a.status==="champion")return -1;
+    if(b.status==="champion")return 1;
+    if(a.status==="eliminated"&&b.status!=="eliminated")return 1;
+    if(b.status==="eliminated"&&a.status!=="eliminated")return -1;
+    if(b.wins!==a.wins)return b.wins-a.wins;
+    return a.losses-b.losses;
+  });
+
+  // Week pips
+  const pips=Array.from({length:totalWeeks},(_,i)=>{
+    const cls=i<playoffWeek-1?'pip done':i===playoffWeek-1?'pip active':'pip';
+    return`<div class="${cls}"></div>`;
+  }).join('');
+
+  // Champion banner
+  const bannerCls=champion?'champion-banner visible':'champion-banner';
+  const bannerHtml=`<div class="${bannerCls}">
+    <div class="champion-title">🏆 PLAYOFF CHAMPION 🏆</div>
+    <div class="champion-name">${champion?champion.name:''}</div>
+  </div>`;
+
+  // Drag strip lanes
+  const lanes=teams.map(team=>{
+    const isElim=team.status==="eliminated";
+    const isChamp=team.status==="champion";
+    const totalWins = team.wins + (team.autoWin ? 1 : 0);
+    const pos = isChamp ? MAX_TRACK : Math.min(totalWins, MAX_TRACK - 1);
+    const kartLabel = team.autoWin ? `⚡` : initials(team.name);
+
+    // Loss indicators
+    const lossMarks=[0,1].map(i=>{
+      if(isElim&&i<2)return`<div class="loss-mark">✕</div>`;
+      if(i<team.losses)return`<div class="loss-mark">✕</div>`;
+      return`<div class="loss-mark empty">○</div>`;
+    }).join('');
+
+    // Track spaces — starting grid + 9 win spaces + finish
+    let spacesHtml='';
+
+    // Starting grid (kart sits here at 0 wins)
+    const atGrid=pos===0;
+    spacesHtml+=`<div class="track-space start-grid${atGrid?' has-kart':''}">`;
+    if(atGrid){
+      if(isElim) spacesHtml+=`<div class="kart-exploded">💥</div>`;
+      else spacesHtml+=`<div class="kart-icon" style="background:${team.color}">${kartLabel}</div>`;
+    }
+    spacesHtml+=`<div class="cell-label grid-lbl">GRID</div></div>`;
+    spacesHtml+=`<div class="dash"></div>`;
+
+    // Win spaces 1–9
+    for(let s=1;s<=MAX_TRACK;s++){
+      const hasKart=pos===s;
+      spacesHtml+=`<div class="track-space${hasKart?' has-kart':''}">`;
+      if(hasKart){
+        if(isElim) spacesHtml+=`<div class="kart-exploded">💥</div>`;
+        else spacesHtml+=`<div class="kart-icon" style="background:${team.color}">${kartLabel}</div>`;
+      }
+      spacesHtml+=`</div>`;
+      if(s<MAX_TRACK) spacesHtml+=`<div class="dash"></div>`;
+    }
+
+    // Finish space
+    const atFinish=pos>=MAX_TRACK;
+    spacesHtml+=`<div class="dash"></div>`;
+    spacesHtml+=`<div class="finish-line">`;
+    if(atFinish){
+      spacesHtml+=`<div class="kart-icon" style="background:${team.color}">${kartLabel}</div>`;
+    }
+    spacesHtml+=`</div>`;
+
+    const winsLabel=isChamp?`🏆 CHAMP`:`${team.wins}W`;
+
+    return`<div class="lane${isElim?' eliminated':''}">
+      <div class="lane-label">
+        <div class="lane-name"><span class="lane-dot" style="background:${team.color}"></span>${team.name}</div>
+        <div class="loss-row">${lossMarks}</div>
+      </div>
+      <div class="lane-track">${spacesHtml}</div>
+      <div class="win-badge">${winsLabel}</div>
+    </div>`;
+  }).join('');
+
+  // Standings table
+  const standRows=sorted.map((t,i)=>{
+    const isElim=t.status==="eliminated";
+    const isChamp=t.status==="champion";
+    let pos=i+1;
+    let posCls=pos===1?'pos p1':pos===2?'pos p2':pos===3?'pos p3':'pos';
+    let statusStr=isChamp?'🏆 Champion':isElim?'💥 OUT':t.losses===1?'⚠ 1 life left':'✅ Active';
+    return`<div class="standing-row${isElim?' elim':''}">
+      <div class="${posCls}">${ordinal(pos)}</div>
+      <span class="lane-dot" style="background:${t.color}"></span>
+      <div class="s-name">${t.name}</div>
+      <div class="s-wins">${t.wins}W</div>
+      <div class="s-losses">${t.losses}L</div>
+      <div class="s-status">${statusStr}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML=`
+    <div class="header">
+      <div class="title">🏁 SDFHL GRAND PRIX — PLAYOFFS</div>
+      <div class="subtitle">PLAYOFF WEEK ${playoffWeek} / ${totalWeeks}</div>
+      <div class="week-pips">${pips}</div>
+    </div>
+
+    ${bannerHtml}
+
+    <div class="strip-section">
+      <div class="section-label">🏎 DRAG STRIP — DOUBLE ELIMINATION · 2 LOSSES = 💥 · UPPER BRACKET BYE = AUTO WIN</div>
+      ${lanes}
+      <div class="legend">
+        <div class="legend-label">KEY</div>
+        <div class="legend-item">✕ = loss</div>
+        <div class="legend-item">○ = life remaining</div>
+        <div class="legend-item">💥 = eliminated</div>
+        <div class="legend-item">⚡ = auto-win (bye)</div>
+        <div class="legend-item">🏁 = finish line</div>
+      </div>
+    </div>`;
+}
+
+window.addEventListener('DOMContentLoaded',render);
+</script>
+</body>
+</html>
