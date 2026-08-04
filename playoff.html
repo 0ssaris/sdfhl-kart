@@ -149,7 +149,7 @@
 // ║  ✏️  EDIT THIS BLOCK EACH WEEK                       ║
 // ╚══════════════════════════════════════════════════════╝
 const PLAYOFF_DATA = {
-  week: 1,
+  week: 2,
   totalWeeks: 6,
 
   // wins  : total wins this playoff
@@ -157,13 +157,13 @@ const PLAYOFF_DATA = {
   // status: "active" | "eliminated" | "champion"
   // autoWin: true if this team received the upper bracket bye auto-win
   teams: [
-    { name:"Purple", color:"#7030a0", wins:1, losses:0, status:"active", autoWin:false },
-    { name:"Brown", color:"#7f6000", wins:1, losses:0, status:"active", autoWin:false },
-    { name:"Blue", color:"#b4c6e7", wins:1, losses:0, status:"active", autoWin:false },
-    { name:"Neon", color:"#ffff00", wins:1, losses:0, status:"active", autoWin:false },
-    { name:"Orange", color:"#f86308", wins:0, losses:1, status:"active", autoWin:false },
-    { name:"Grey", color:"#757070", wins:0, losses:1, status:"active", autoWin:false },
-    { name:"Green", color:"#00b050", wins:0, losses:1, status:"active", autoWin:false },
+    { name:"Purple", color:"#7030a0", wins:2, losses:0, status:"active", autoWin:false },
+    { name:"Brown", color:"#7f6000", wins:2, losses:0, status:"active", autoWin:false },
+    { name:"Blue", color:"#b4c6e7", wins:1, losses:2, status:"eliminated", autoWin:false },
+    { name:"Neon", color:"#ffff00", wins:1, losses:1, status:"active", autoWin:false },
+    { name:"Orange", color:"#f86308", wins:1, losses:1, status:"active", autoWin:false },
+    { name:"Grey", color:"#757070", wins:1, losses:1, status:"active", autoWin:false },
+    { name:"Green", color:"#00b050", wins:0, losses:2, status:"eliminated", autoWin:false },
     { name:"Pink", color:"#ef2fc6", wins:0, losses:1, status:"active", autoWin:false },
   ],
 };
