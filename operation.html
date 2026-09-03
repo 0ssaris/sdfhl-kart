@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation: Dead Drop — SDFHL Fall 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--panel2:#0d1117;--border:#30363d;--text:#e6edf3;--dim:#8b949e;--amber:#d4a017;--amber2:#f0c040;--red:#f85149;--green:#3fb950;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'VT323',monospace;padding:20px 16px 40px;min-height:100vh;}
+  .container{max-width:780px;margin:0 auto;}
+
+  /* HEADER */
+  .header{border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;background:var(--panel);position:relative;}
+  .stamp{position:absolute;top:14px;right:14px;border:2px solid var(--red);color:var(--red);font-family:'Press Start 2P',monospace;font-size:7px;padding:3px 8px;border-radius:3px;letter-spacing:3px;transform:rotate(-2deg);}
+  .op-title{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.2vw,14px);color:var(--amber);letter-spacing:2px;margin-bottom:6px;line-height:1.7;}
+  .op-sub{font-size:20px;color:var(--dim);letter-spacing:2px;}
+  .divider{height:1px;background:var(--border);margin:10px 0;}
+  .header-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+  .field-update{font-size:16px;color:var(--dim);letter-spacing:1px;}
+  .week-pips{display:flex;gap:5px;}
+  .pip{width:9px;height:9px;border-radius:50%;background:var(--border);border:1px solid var(--dim);}
+  .pip.done{background:var(--dim);border-color:var(--dim);}
+  .pip.active{background:var(--amber);border-color:var(--amber);box-shadow:0 0 4px var(--amber);}
+
+  /* SECTION LABEL */
+  .section-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--dim);letter-spacing:3px;margin:16px 0 8px;}
+
+  /* FILE ROWS */
+  .dossier{display:flex;flex-direction:column;gap:6px;}
+  .file-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:6px;transition:border-color .15s;}
+  .file-row.leading{border-color:var(--amber);box-shadow:0 0 0 1px rgba(212,160,23,0.15);}
+  .color-strip{width:4px;height:36px;border-radius:2px;flex-shrink:0;}
+  .team-info{width:190px;flex-shrink:0;}
+  .codename{font-size:18px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .codename.redacted{text-decoration:line-through;color:var(--dim);}
+  .record{font-size:14px;color:var(--dim);margin-top:1px;letter-spacing:1px;}
+  .progress-col{flex:1;}
+  .prog-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .prog-label{font-size:13px;color:var(--dim);}
+  .prog-val{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--amber);}
+  .prog-bar{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:3px;transition:width .4s;}
+  .intel-badge{flex-shrink:0;display:flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:16px;color:var(--dim);white-space:nowrap;}
+  .intel-n{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--amber2);}
+
+  /* FOOTER KEY */
+  .key{margin-top:16px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:12px;}
+  .key-item{font-size:16px;color:var(--dim);}
+
+  @media(max-width:560px){.team-info{width:140px;}.codename{font-size:16px;}.intel-badge{display:none;}}
+</style>
+</head>
+<body>
+<div class="container"><div id="app"></div></div>
+<script>
+// ╔══════════════════════════════════════════════════════╗
+// ║  ✏️  EDIT THIS BLOCK EACH WEEK                       ║
+// ╚══════════════════════════════════════════════════════╝
+const OPERATION_DATA = {
+  week: 1,
+  totalWeeks: 9,
+
+  // spaces : cumulative points (W=+3, T=+1, L=+0)
+  // wins / ties / losses : season record for display
+  // redacted : shows codename with strikethrough
+  teams: [
+    { name:"Neon",    codename:"The Nick Who Gloved Me",       color:"#ffff00", spaces:3,  wins:1, ties:0, losses:0 },
+    { name:"Charcoal",codename:"REDACTED",                     color:"#555555", spaces:3,  wins:1, ties:0, losses:0, redacted:true },
+    { name:"Grey",    codename:"Greyed Out",                   color:"#757070", spaces:3,  wins:1, ties:0, losses:0 },
+    { name:"Brown",   codename:"Brownfinger",                  color:"#7f6000", spaces:3,  wins:1, ties:0, losses:0 },
+    { name:"Teal",    codename:"Double Do' 7: License to Teal",color:"#008080", spaces:3,  wins:1, ties:0, losses:0 },
+    { name:"Blue",    codename:"Karsino Royale",               color:"#b4c6e7", spaces:0,  wins:0, ties:0, losses:1 },
+    { name:"Pink",    codename:"Mason Impossible: Pink Ops",   color:"#ef2fc6", spaces:0,  wins:0, ties:0, losses:1 },
+    { name:"White",   codename:"Snowbody Dubs It Better",      color:"#e8e8e8", spaces:0,  wins:0, ties:0, losses:1 },
+    { name:"Maroon",  codename:"Maroonraker",                  color:"#800000", spaces:0,  wins:0, ties:0, losses:1 },
+    { name:"Green",   codename:"coVert AgedGents",             color:"#00b050", spaces:0,  wins:0, ties:0, losses:1 },
+  ],
+};
+// ╚══════════════════════════════════════════════════════╝
+
+const MAX_SPACES = 27; // 9 weeks × 3pts
+
+function intel(spaces){ return Math.floor(spaces/3); }
+
+function render(){
+  const{week,totalWeeks,teams}=OPERATION_DATA;
+  const sorted=[...teams].sort((a,b)=>b.spaces-a.spaces);
+  const leader=sorted[0];
+
+  const pips=Array.from({length:totalWeeks},(_,i)=>{
+    const cls=i<week-1?'pip done':i===week-1?'pip active':'pip';
+    return`<div class="${cls}"></div>`;
+  }).join('');
+
+  const rows=sorted.map((t,i)=>{
+    const pct=Math.min(100,Math.round((t.spaces/MAX_SPACES)*100));
+    const intelCount=intel(t.spaces);
+    const isLeading=i===0&&t.spaces>0;
+    const rec=`${t.wins}W · ${t.ties}T · ${t.losses}L`;
+    const codeHtml=t.redacted
+      ?`<span class="codename redacted">${t.codename}</span>`
+      :`<span class="codename">${t.codename}</span>`;
+    return`<div class="file-row${isLeading?' leading':''}">
+      <div class="color-strip" style="background:${t.color}"></div>
+      <div class="team-info">
+        ${codeHtml}
+        <div class="record">${rec}</div>
+      </div>
+      <div class="progress-col">
+        <div class="prog-top">
+          <span class="prog-label">mission progress</span>
+          <span class="prog-val">${t.spaces}/${MAX_SPACES} pts</span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" style="width:${pct}%;background:${t.color};min-width:${t.spaces>0?'4px':'0'}"></div>
+        </div>
+      </div>
+      <div class="intel-badge">
+        🗂️ <span class="intel-n">${intelCount}</span> intel
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML=`
+    <div class="header">
+      <div class="stamp">TOP SECRET</div>
+      <div class="op-title">OPERATION: DEAD DROP</div>
+      <div class="op-sub">SDFHL FALL 2026 — MISSION STATUS</div>
+      <div class="divider"></div>
+      <div class="header-foot">
+        <div class="field-update">WEEK ${week} OF ${totalWeeks} — FIELD UPDATE RECEIVED</div>
+        <div class="week-pips">${pips}</div>
+      </div>
+    </div>
+    <div class="section-label">// ACTIVE AGENCIES — SORTED BY MISSION PROGRESS</div>
+    <div class="dossier">${rows}</div>
+    <div class="key">
+      <span class="key-item">WIN = +3 pts</span>
+      <span class="key-item">TIE = +1 pt</span>
+      <span class="key-item">LOSS = +0</span>
+      <span class="key-item">INTEL EARNED EVERY 3 PTS</span>
+      <span class="key-item">27 PTS MAX</span>
+    </div>`;
+}
+
+window.addEventListener('DOMContentLoaded',render);
+</script>
+</body>
+</html>
